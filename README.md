@@ -1,4 +1,4 @@
-# Hybrid Work Model Optimization Dashboard
+# Workspace Analytics Dashboard
 
 This project provides a comprehensive solution for analyzing and optimizing workspace utilization in a hybrid work environment. It simulates realistic workspace data for HSBC's ASP (Asia-Pacific) region and presents the findings in an interactive, web-based dashboard.
 
