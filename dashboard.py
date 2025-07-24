@@ -5,21 +5,32 @@ import sqlite3
 import plotly.express as px
 import os
 import json
-from dotenv import load_dotenv
 import google.generativeai as genai
 import numpy as np
 
-# --- Configuration & Initialization ---
-load_dotenv()
-DB_FILE = 'workspace_analytics.db'
+# --- Page Setup ---
+st.set_page_config(page_title="Workplace Analytics Dashboard", layout="wide")
+st.title("Workplace Analytics Dashboard")
+st.markdown("Analyzing workspace utilization patterns for the ASP Region.")
 
-# Configure the generative AI model
-try:
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    llm_model = genai.GenerativeModel(os.environ["LLM_MODEL"])
-except Exception as e:
-    st.error(f"Error configuring the AI model: {e}. Have you set your GEMINI_API_KEY in the .env file?")
-    llm_model = None
+# --- API Key Input ---
+st.sidebar.header("API Configuration")
+api_key = st.sidebar.text_input("Enter your Gemini API Key", type="password")
+
+# --- Configuration & Initialization ---
+DB_FILE = 'workspace_analytics.db'
+llm_model = None
+
+if api_key:
+    try:
+        genai.configure(api_key=api_key)
+        llm_model = genai.GenerativeModel('gemini-pro') # Or your preferred model
+        st.sidebar.success("API Key configured successfully!")
+    except Exception as e:
+        st.sidebar.error(f"Error configuring the AI model: {e}")
+else:
+    st.sidebar.warning("Please enter your Gemini API Key to enable AI features.")
+
 
 # --- AI Insight Generation ---
 def convert_to_json_serializable(obj):
@@ -41,7 +52,7 @@ def convert_to_json_serializable(obj):
 def generate_insights(data_summary):
     """Generates insights using the configured generative AI model."""
     if not llm_model:
-        return "AI Model not available. Please check your API key configuration."
+        return "AI Model not available. Please enter your API key in the sidebar."
 
     serializable_summary = convert_to_json_serializable(data_summary)
     prompt = f"""
@@ -75,11 +86,6 @@ def run_query(query):
     df = pd.read_sql_query(query, conn)
     conn.close()
     return df
-
-# --- Page Setup ---
-st.set_page_config(page_title="Workplace Analytics Dashboard", layout="wide")
-st.title("Workplace Analytics Dashboard")
-st.markdown("Analyzing workspace utilization patterns for the ASP Region.")
 
 # --- Sidebar Filters ---
 st.sidebar.header("Dashboard Filters")
@@ -207,19 +213,22 @@ st.divider()
 
 # --- AI-Powered Analysis Section ---
 st.header("AI-Powered Analysis")
-if st.button("✨ Generate Insights & Recommendations"):
-    with st.spinner("Analyzing data and generating insights... (This may take a moment)"):
-        data_summary = {
-            "kpis": {
-                "peak_daily_occupancy": peak_occupancy,
-                "avg_daily_utilization_percent": round(avg_utilization, 2),
-                "no_show_rate_percent": round(no_show_rate, 2),
-                "adhoc_booking_rate_percent": round(adhoc_rate, 2)
-            },
-            "avg_occupancy_by_day": day_of_week_df.to_dict(orient='records'),
-            "bookings_by_space_type": space_type_df.to_dict(orient='records'),
-        }
-        report = generate_insights(data_summary)
-        st.markdown(report)
+if not llm_model:
+    st.warning("Please enter your Gemini API Key in the sidebar to use this feature.")
 else:
-    st.info("Click the button to get an AI-powered analysis of the current data view.")
+    if st.button("✨ Generate Insights & Recommendations"):
+        with st.spinner("Analyzing data and generating insights... (This may take a moment)"):
+            data_summary = {
+                "kpis": {
+                    "peak_daily_occupancy": peak_occupancy,
+                    "avg_daily_utilization_percent": round(avg_utilization, 2),
+                    "no_show_rate_percent": round(no_show_rate, 2),
+                    "adhoc_booking_rate_percent": round(adhoc_rate, 2)
+                },
+                "avg_occupancy_by_day": day_of_week_df.to_dict(orient='records'),
+                "bookings_by_space_type": space_type_df.to_dict(orient='records'),
+            }
+            report = generate_insights(data_summary)
+            st.markdown(report)
+    else:
+        st.info("Click the button to get an AI-powered analysis of the current data view.")
