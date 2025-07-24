@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "context7": {
+      "httpUrl": "https://mcp.context7.com/mcp"
+    },
+    "gas_web_apps": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://script.google.com/macros/s/AKfycbxA5ojlsKfWcX6dZ1XE0DtLgNbNIsL976PeB41tmqj4GNtFNNDuJTPmAyIJDQm5jGm6/exec?accessKey=sample"
+      ],
+      "env": {}
+    }
+  }
+}
